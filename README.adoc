@@ -1,0 +1,52 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+= Ponyiser
+Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+:toc: left
+:icons: font
+
+== What Is This?
+
+Ponyiser wraps existing concurrent code in Pony's **reference capability
+system** — making data races structurally impossible at compile time.
+
+Pony doesn't just detect data races. It makes them **impossible by construction**.
+Ponyiser brings this guarantee to existing codebases.
+
+== How It Works
+
+Describe your concurrent components in `ponyiser.toml`. Ponyiser:
+
+1. Analyses shared state and message passing patterns
+2. Assigns Pony reference capabilities (iso, val, ref, box, tag, trn)
+3. Generates Pony actors with correct capability annotations
+4. Creates a Zig FFI bridge for interop with your existing code
+5. Compile-time errors if any data race is possible
+
+== Key Value
+
+* **Data races become compile errors** — not runtime bugs
+* **No locks, no mutexes** — actors with capability-safe messaging
+* **Existing code wraps safely** — gradual adoption
+
+== Architecture
+
+Follows the hyperpolymath -iser pattern (same as https://github.com/hyperpolymath/chapeliser[Chapeliser]):
+
+* **Manifest** (`ponyiser.toml`) — describe WHAT you want
+* **Idris2 ABI** (`src/abi/`) — formal proofs of interface correctness
+* **Zig FFI** (`ffi/zig/`) — C-ABI bridge to target language runtime
+* **Codegen** (`src/codegen/`) — generates target language wrapper code
+* **Rust CLI** — parses manifest, validates, generates, builds, runs
+
+User writes zero target language code. Ponyiser generates everything.
+
+Part of the https://github.com/hyperpolymath/iseriser[-iser family] of acceleration frameworks.
+
+== Status
+
+**Pre-alpha.** Architecture defined, scaffolding in place, codegen pending.
+
+== License
+
+SPDX-License-Identifier: PMPL-1.0-or-later
