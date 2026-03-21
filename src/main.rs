@@ -1,16 +1,22 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 // Copyright (c) 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 //
-// ponyiser CLI — Eliminate data races via Pony reference capabilities
+// ponyiser CLI — Eliminate data races via Pony reference capabilities.
+//
+// Wraps concurrent code in Pony actor/behaviour wrappers with reference
+// capability annotations. The 6 Pony capabilities (iso, val, ref, box,
+// trn, tag) guarantee data-race freedom at compile time without locks.
+//
 // Part of the hyperpolymath -iser family. See README.adoc for architecture.
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 
+mod abi;
 mod codegen;
 mod manifest;
 
-/// ponyiser — Eliminate data races via Pony reference capabilities
+/// ponyiser — Eliminate data races via Pony reference capabilities.
 #[derive(Parser)]
 #[command(name = "ponyiser", version, about, long_about = None)]
 struct Cli {
@@ -31,7 +37,7 @@ enum Commands {
         #[arg(short, long, default_value = "ponyiser.toml")]
         manifest: String,
     },
-    /// Generate Pony wrapper, Zig FFI bridge, and C headers from the manifest.
+    /// Generate Pony wrapper files from the manifest.
     Generate {
         #[arg(short, long, default_value = "ponyiser.toml")]
         manifest: String,
@@ -45,7 +51,7 @@ enum Commands {
         #[arg(long)]
         release: bool,
     },
-    /// Run the ponyiserd workload.
+    /// Run the ponyiser workload.
     Run {
         #[arg(short, long, default_value = "ponyiser.toml")]
         manifest: String,
@@ -69,7 +75,7 @@ fn main() -> Result<()> {
         Commands::Validate { manifest } => {
             let m = manifest::load_manifest(&manifest)?;
             manifest::validate(&m)?;
-            println!("Manifest valid: {}", m.workload.name);
+            println!("Manifest valid: {}", m.project.name);
         }
         Commands::Generate { manifest, output } => {
             let m = manifest::load_manifest(&manifest)?;
