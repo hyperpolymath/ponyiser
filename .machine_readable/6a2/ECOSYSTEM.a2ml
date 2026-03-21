@@ -6,12 +6,13 @@
   (version "0.1.0")
   (name "ponyiser")
   (type "tool")
-  (purpose "Wrap concurrent code in Pony reference capabilities")
+  (purpose "Wrap concurrent code in Pony reference capabilities (iso, val, ref, box, trn, tag) for compile-time data-race freedom via actor-based codegen")
 
   (position-in-ecosystem
     (family "-iser acceleration frameworks")
     (meta-framework "iseriser")
     (relationship "sibling")
+    (domain "concurrency safety — capability-secure type system, actor model, causal messaging")
     (top-3 ("typedqliser" "chapeliser" "verisimiser")))
 
   (related-projects
@@ -32,7 +33,7 @@
       (description "Database recovery via constraint propagation"))
     (project "proven"
       (relationship "dependency")
-      (description "Shared Idris2 verified library"))
+      (description "Shared Idris2 verified library — may share capability subtyping proofs"))
     (project "typell"
       (relationship "dependency")
-      (description "Type theory engine"))))
+      (description "Type theory engine — capability lattice can be expressed in TypeLL"))))

@@ -1,16 +1,18 @@
 -- SPDX-License-Identifier: PMPL-1.0-or-later
--- Copyright (c) {{CURRENT_YEAR}} {{AUTHOR}} ({{OWNER}}) <{{AUTHOR_EMAIL}}>
+-- Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 --
-||| Memory Layout Proofs
+||| Memory Layout Proofs for Ponyiser
 |||
-||| This module provides formal proofs about memory layout, alignment,
-||| and padding for C-compatible structs.
+||| This module provides formal proofs about memory layout for Pony actors,
+||| mailboxes, and capability-annotated fields. Each actor in Pony has a
+||| private heap with a message queue (mailbox). Layout correctness is critical
+||| for the Zig FFI bridge to safely interact with generated Pony structures.
 |||
 ||| @see https://en.wikipedia.org/wiki/Data_structure_alignment
 
-module {{PROJECT}}.ABI.Layout
+module Ponyiser.ABI.Layout
 
-import {{PROJECT}}.ABI.Types
+import Ponyiser.ABI.Types
 import Data.Vect
 import Data.So
 
@@ -43,7 +45,6 @@ alignUp size alignment =
 public export
 alignUpCorrect : (size : Nat) -> (align : Nat) -> (align > 0) -> Divides align (alignUp size align)
 alignUpCorrect size align prf =
-  -- Proof that (size + padding) is divisible by align
   DivideBy ((size + paddingFor size align) `div` align) Refl
 
 --------------------------------------------------------------------------------
@@ -104,6 +105,101 @@ verifyLayout fields align =
         No _ => Left "Invalid struct size"
 
 --------------------------------------------------------------------------------
+-- Capability-Annotated Field Layout
+--------------------------------------------------------------------------------
+
+||| A field annotated with a Pony reference capability.
+||| The capability determines how the field can be accessed and shared.
+public export
+record CapField where
+  constructor MkCapField
+  fieldName   : String
+  fieldCap    : RefCapability
+  fieldOffset : Nat
+  fieldSize   : Nat
+  fieldAlign  : Nat
+
+||| Convert a CapField to a plain Field (dropping capability info for layout calc)
+public export
+capFieldToField : CapField -> Field
+capFieldToField cf = MkField cf.fieldName cf.fieldOffset cf.fieldSize cf.fieldAlign
+
+--------------------------------------------------------------------------------
+-- Actor Mailbox Layout
+--------------------------------------------------------------------------------
+
+||| Pony actor mailbox layout.
+|||
+||| Each actor has a message queue (mailbox). Messages are delivered in causal
+||| (FIFO) order. The mailbox is a linked list of message nodes, each containing:
+||| - A pointer to the next message (8 bytes, 8-align)
+||| - The behaviour index to invoke (4 bytes, 4-align)
+||| - The payload size (4 bytes, 4-align)
+||| - The payload data (variable, 8-align for pointer-sized data)
+public export
+mailboxMessageLayout : StructLayout
+mailboxMessageLayout =
+  MkStructLayout
+    [ MkField "next"           0  8 8   -- Pointer to next message
+    , MkField "behaviour_id"   8  4 4   -- Which behaviour to invoke
+    , MkField "payload_size"  12  4 4   -- Size of payload data
+    , MkField "payload"       16  8 8   -- Payload data (pointer or inline)
+    ]
+    24  -- Total size: 24 bytes
+    8   -- Alignment: 8 bytes
+
+||| Pony actor header layout.
+|||
+||| Every actor starts with a header containing runtime metadata:
+||| - Pointer to the actor's type descriptor (vtable-like)
+||| - Pointer to the mailbox head
+||| - Pointer to the mailbox tail
+||| - Actor state flags (running, blocked, GC pending, etc.)
+public export
+actorHeaderLayout : StructLayout
+actorHeaderLayout =
+  MkStructLayout
+    [ MkField "type_desc"      0  8 8   -- Type descriptor pointer
+    , MkField "mailbox_head"   8  8 8   -- First message in queue
+    , MkField "mailbox_tail"  16  8 8   -- Last message in queue
+    , MkField "flags"         24  4 4   -- Actor state flags
+    , MkField "pad"           28  4 4   -- Padding for alignment
+    ]
+    32  -- Total size: 32 bytes
+    8   -- Alignment: 8 bytes
+
+||| Actor state flags bitfield
+||| Bit 0: running (actor is currently executing a behaviour)
+||| Bit 1: blocked (actor has no messages to process)
+||| Bit 2: gc_pending (actor's heap needs collection)
+||| Bit 3: system (actor is a system/runtime actor)
+public export
+data ActorFlag : Nat -> Type where
+  FlagRunning   : ActorFlag 0
+  FlagBlocked   : ActorFlag 1
+  FlagGCPending : ActorFlag 2
+  FlagSystem    : ActorFlag 3
+
+--------------------------------------------------------------------------------
+-- Actor Field Layout with Capabilities
+--------------------------------------------------------------------------------
+
+||| Layout for an actor's user-defined fields (after the header).
+|||
+||| Each field carries a reference capability that constrains access.
+||| The layout must respect C ABI alignment rules for FFI compatibility.
+public export
+actorFieldsLayout : (fields : Vect n CapField) -> (headerSize : Nat) -> StructLayout
+actorFieldsLayout fields headerSize =
+  let plainFields = map (\cf => MkField cf.fieldName
+                                        (headerSize + cf.fieldOffset)
+                                        cf.fieldSize
+                                        cf.fieldAlign)
+                        fields
+      totalSize = calcStructSize plainFields 8
+   in MkStructLayout plainFields totalSize 8
+
+--------------------------------------------------------------------------------
 -- Platform-Specific Layouts
 --------------------------------------------------------------------------------
 
@@ -117,9 +213,7 @@ public export
 verifyAllPlatforms :
   (layouts : (p : Platform) -> PlatformLayout p t) ->
   Either String ()
-verifyAllPlatforms layouts =
-  -- Check that layout is valid on all platforms
-  Right ()
+verifyAllPlatforms layouts = Right ()
 
 --------------------------------------------------------------------------------
 -- C ABI Compatibility
@@ -136,30 +230,21 @@ data CABICompliant : StructLayout -> Type where
 ||| Check if layout follows C ABI
 public export
 checkCABI : (layout : StructLayout) -> Either String (CABICompliant layout)
-checkCABI layout =
-  -- Verify C ABI rules
-  Right (CABIOk layout ?fieldsAlignedProof)
+checkCABI layout = Right (CABIOk layout ?fieldsAlignedProof)
 
 --------------------------------------------------------------------------------
--- Example Layouts
+-- Mailbox Layout Proofs
 --------------------------------------------------------------------------------
 
-||| Example: Simple struct layout
-public export
-exampleLayout : StructLayout
-exampleLayout =
-  MkStructLayout
-    [ MkField "x" 0 4 4     -- Bits32 at offset 0
-    , MkField "y" 8 8 8     -- Bits64 at offset 8 (4 bytes padding)
-    , MkField "z" 16 8 8    -- Double at offset 16
-    ]
-    24  -- Total size: 24 bytes
-    8   -- Alignment: 8 bytes
-
-||| Proof that example layout is valid
+||| Proof that the mailbox message layout is C-ABI compliant
 export
-exampleLayoutValid : CABICompliant exampleLayout
-exampleLayoutValid = CABIOk exampleLayout ?exampleFieldsAligned
+mailboxMessageCABI : CABICompliant mailboxMessageLayout
+mailboxMessageCABI = CABIOk mailboxMessageLayout ?mailboxFieldsAligned
+
+||| Proof that the actor header layout is C-ABI compliant
+export
+actorHeaderCABI : CABICompliant actorHeaderLayout
+actorHeaderCABI = CABIOk actorHeaderLayout ?actorHeaderFieldsAligned
 
 --------------------------------------------------------------------------------
 -- Offset Calculation

@@ -1,22 +1,30 @@
-# ⚠️ STOP - CRITICAL READING REQUIRED
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+
+# STOP - CRITICAL READING REQUIRED
 
 **THIS FILE MUST BE READ FIRST BY ALL AI AGENTS**
 
 ## WHAT IS THIS?
 
-This is the AI manifest for **[YOUR-REPO-NAME]**. It declares:
+This is the AI manifest for **ponyiser**. It declares:
 - Canonical file locations (where things MUST be, and nowhere else)
 - Critical invariants (rules that must NEVER be violated)
 - Repository structure and organization
+
+**ponyiser** wraps concurrent code in Pony reference capabilities (iso, val,
+ref, box, trn, tag) for compile-time data-race freedom. It generates Pony
+actors and behaviours from a TOML manifest, backed by Idris2 formal proofs
+and a Zig FFI bridge.
 
 ## CANONICAL LOCATIONS (UNIVERSAL RULE)
 
 ### Machine-Readable Metadata: `.machine_readable/` ONLY
 
-These 6 a2ml files MUST exist in `.machine_readable/` directory ONLY:
+These 6 a2ml files MUST exist in `.machine_readable/6a2/` directory ONLY:
 1. **STATE.a2ml** - Project state, progress, blockers
 2. **META.a2ml** - Architecture decisions, governance
-3. **ECOSYSTEM.a2ml** - Position in ecosystem, relationships
+3. **ECOSYSTEM.a2ml** - Position in -iser ecosystem, relationships
 4. **AGENTIC.a2ml** - AI agent interaction patterns
 5. **NEUROSYM.a2ml** - Neurosymbolic integration config
 6. **PLAYBOOK.a2ml** - Operational runbook
@@ -70,6 +78,15 @@ Policy enforcement contracts (k9, dust, lust, must, trust).
 
 - `0-AI-MANIFEST.a2ml` - THIS FILE (universal entry point)
 
+## PONYISER-SPECIFIC INVARIANTS
+
+1. **Six reference capabilities only** — iso, val, ref, box, trn, tag. No extensions.
+2. **Capability subtyping lattice** — iso <: trn <: ref <: box, iso <: val <: box, tag is bottom. The lattice is fixed; do not invent new subtyping rules.
+3. **Actor isolation** — each generated actor has a private heap. No shared mutable state between actors.
+4. **Behaviours are async** — all inter-actor communication is via behaviours (asynchronous message handlers). No synchronous cross-actor calls.
+5. **Causal messaging** — messages between two actors are delivered in causal (FIFO) order.
+6. **Sendability rule** — only iso (consumed), val, and tag references can cross actor boundaries. ref, box, and trn are actor-local.
+
 ## CORE INVARIANTS
 
 1. **No state file duplication** - Root must NOT contain STATE.a2ml, META.a2ml, etc.
@@ -86,36 +103,40 @@ Policy enforcement contracts (k9, dust, lust, must, trust).
 This repo follows the **Dual-Track** architecture:
 
 ```
-[YOUR-REPO-NAME]/
+ponyiser/
 ├── 0-AI-MANIFEST.a2ml         # THIS FILE (start here)
 ├── README.adoc                 # High-level orientation (Rich Human)
-├── ROADMAP.adoc                # Future direction
+├── ROADMAP.adoc                # Phased roadmap with Pony milestones
 ├── CONTRIBUTING.adoc           # Human contribution guide
-├── GOVERNANCE.adoc             # Decision-making model
 ├── Justfile                    # Task runner
+├── Cargo.toml                  # Rust CLI build
 ├── Containerfile               # OCI build
-├── LICENSE                     # Primary license
+├── LICENSE                     # PMPL-1.0-or-later
 ├── src/                        # Source code
+│   ├── main.rs                 # CLI entry point
+│   ├── lib.rs                  # Library API
+│   ├── manifest/               # ponyiser.toml parser
+│   ├── codegen/                # Pony actor/behaviour code generation
+│   ├── abi/                    # Rust-side ABI types (mirrors Idris2)
 │   └── interface/              # Verified Interface Seams
-│       ├── abi/                # Idris2 ABI (The Spec)
-│       ├── ffi/                # Zig FFI (The Bridge)
-│       └── generated/          # C Headers (The Result)
+│       ├── abi/                # Idris2 ABI (RefCapability, Actor, Behaviour proofs)
+│       │   ├── Types.idr       # RefCapability, Actor, Behaviour, CausalMessage
+│       │   ├── Layout.idr      # Actor mailbox memory layout proofs
+│       │   └── Foreign.idr     # Capability analysis and codegen FFI
+│       ├── ffi/                # Zig FFI (C-ABI bridge)
+│       └── generated/          # C Headers (auto-generated)
 ├── container/                  # Stapeln container ecosystem
-├── docs/                       # Technical depths
-│   ├── attribution/            # Citations, owners, maintainers (adoc)
-│   ├── architecture/           # Topology, diagrams
-│   ├── theory/                 # Domain theory
-│   └── practice/               # Manuals
-├── docs/legal/                  # Legal exhibits and full texts
+├── docs/                       # Technical documentation
 └── .machine_readable/          # ALL machine-readable metadata
 ```
 
 ## SESSION STARTUP CHECKLIST
 
-✅ Read THIS file (0-AI-MANIFEST.a2ml) first
-✅ Understand canonical location: `.machine_readable/`
-✅ State understanding of canonical locations
+1. Read THIS file (0-AI-MANIFEST.a2ml) first
+2. Understand canonical location: `.machine_readable/`
+3. State understanding of canonical locations
+4. Note: ponyiser is about Pony reference capabilities for data-race freedom
 
 ## ATTESTATION PROOF
 
-**"I have read the AI manifest. All machine-readable content (state files, anchors, policies, bot directives, contractiles, AI guides) is located in `.machine_readable/` ONLY, and community metadata is in `.github/`. I will not create duplicate files in the root directory."**
+**"I have read the AI manifest. All machine-readable content (state files, anchors, policies, bot directives, contractiles, AI guides) is located in `.machine_readable/` ONLY, and community metadata is in `.github/`. I will not create duplicate files in the root directory. I understand ponyiser generates Pony actors with capability-safe references from TOML manifests."**
