@@ -11,27 +11,30 @@
   (project-context
     (name "ponyiser")
     (description "Wrap concurrent code in Pony reference capabilities for compile-time data-race freedom")
-    (status "scaffold-documented")
+    (status "phase-1-complete")
     (priority "—")
-    (ecosystem "-iser family (https://github.com/hyperpolymath/iseriser)"))
+    (ecosystem "-iser family (https://github.com/hyperpolymath/iseriser)")
+    (domain "Concurrent systems with reference capability safety"))
 
   (current-position
-    (phase "scaffold-with-bespoke-abi")
-    (completion-percentage 15)
-    (milestone "Bespoke ABI types (RefCapability, Actor, Behaviour, CausalMessage, CapabilitySubtyping), FFI with capability analysis/subtyping/sendability, comprehensive integration tests, full documentation"))
+    (phase "phase-1-complete")
+    (completion-percentage 45)
+    (milestone "Phase 1 complete — scaffold, CLI, manifest parser, codegen stubs, ABI types, RSR template"))
 
   (route-to-mvp
-    (step 1 "Implement capability inference engine in Rust CLI (parse concurrent code, assign capabilities)")
-    (step 2 "Implement Pony actor codegen (generate actor declarations, behaviour signatures)")
-    (step 3 "Implement causal message codegen with sendability validation")
-    (step 4 "Build Zig FFI bridge with actor mailbox interop")
-    (step 5 "End-to-end example: concurrent producer/consumer pipeline")
-    (step 6 "Documentation, benchmarks, additional patterns"))
+    (step 1 "Phase 1 — scaffold, CLI, manifest parser, ABI types [COMPLETE]")
+    (step 2 "Phase 2 — core domain logic implementation")
+    (step 3 "Phase 3 — Idris2 ABI formal proofs")
+    (step 4 "Phase 4 — Zig FFI bridge implementation")
+    (step 5 "Phase 5 — integration tests with real targets")
+    (step 6 "Phase 6 — documentation and examples")
+    (step 7 "Phase 7 — Chainguard container + CI hardening")
+    (step 8 "Phase 8 — first release (v0.1.0)"))
 
   (blockers-and-issues
-    (none "Project is in documented scaffold phase — ABI designed, codegen pending"))
+    (none "No blockers — Phase 1 complete, ready for Phase 2"))
 
   (critical-next-actions
-    (action "Implement capability inference from access pattern analysis in codegen/mod.rs")
-    (action "Generate first Pony actor with correct capability annotations")
-    (action "Write end-to-end test: TOML manifest -> generated Pony code -> compile -> run")))
+    (action "Begin Phase 2 — implement core domain logic for ponyiser")
+    (action "Write property-based tests for manifest parsing")
+    (action "Define Idris2 ABI proof obligations for Phase 3")))
