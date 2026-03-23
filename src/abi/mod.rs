@@ -54,6 +54,7 @@ impl RefCapability {
     /// Parse a reference capability from a string.
     ///
     /// Accepts lowercase Pony keywords: iso, val, ref, box, trn, tag.
+    #[allow(clippy::should_implement_trait)]
     pub fn from_str(s: &str) -> Option<RefCapability> {
         match s.trim().to_lowercase().as_str() {
             "iso" => Some(RefCapability::Iso),
@@ -272,11 +273,7 @@ impl fmt::Display for CapabilityViolation {
         write!(
             f,
             "[{}] {}: expected '{}', found '{}' — {}",
-            self.actor,
-            self.target,
-            self.expected,
-            self.found,
-            self.message
+            self.actor, self.target, self.expected, self.found, self.message
         )
     }
 }
@@ -286,7 +283,10 @@ impl fmt::Display for CapabilityViolation {
 /// In Pony, data sent between actors must use sendable capabilities
 /// (iso, val, or tag). This function checks each behaviour's parameters
 /// and returns any violations found.
-pub fn validate_sendability(actors: &[Actor], behaviours: &[Behaviour]) -> Vec<CapabilityViolation> {
+pub fn validate_sendability(
+    actors: &[Actor],
+    behaviours: &[Behaviour],
+) -> Vec<CapabilityViolation> {
     let mut violations = Vec::new();
 
     for behaviour in behaviours {
@@ -336,8 +336,8 @@ pub fn validate_sendability(actors: &[Actor], behaviours: &[Behaviour]) -> Vec<C
 /// for parameters that need to be sent across actor boundaries.
 pub fn suggest_sendable_capability(needs_read: bool, needs_write: bool) -> RefCapability {
     match (needs_read, needs_write) {
-        (_, true) => RefCapability::Iso,  // unique mutable reference
-        (true, false) => RefCapability::Val, // shared immutable
+        (_, true) => RefCapability::Iso,      // unique mutable reference
+        (true, false) => RefCapability::Val,  // shared immutable
         (false, false) => RefCapability::Tag, // identity only
     }
 }
@@ -349,7 +349,11 @@ mod tests {
     #[test]
     fn test_subtyping_reflexivity() {
         for cap in RefCapability::all() {
-            assert!(is_subtype(*cap, *cap), "{} should be subtype of itself", cap);
+            assert!(
+                is_subtype(*cap, *cap),
+                "{} should be subtype of itself",
+                cap
+            );
         }
     }
 

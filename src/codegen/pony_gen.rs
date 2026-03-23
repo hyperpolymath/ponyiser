@@ -93,11 +93,11 @@ fn generate_actor_file(
     output.push('\n');
 
     // Actor documentation.
-    if options.include_docs {
-        if let Some(ref doc) = actor.doc {
-            for line in doc.as_str().lines() {
-                writeln!(output, "  \"\"\" {} \"\"\"", line)?;
-            }
+    if options.include_docs
+        && let Some(ref doc) = actor.doc
+    {
+        for line in doc.as_str().lines() {
+            writeln!(output, "  \"\"\" {} \"\"\"", line)?;
         }
     }
 
@@ -109,7 +109,11 @@ fn generate_actor_file(
         for field in &actor.fields {
             let pony_type = to_pony_type(&field.field_type, field.capability);
             if options.include_docs {
-                writeln!(output, "  // Field '{}' with capability '{}'", field.name, field.capability)?;
+                writeln!(
+                    output,
+                    "  // Field '{}' with capability '{}'",
+                    field.name, field.capability
+                )?;
             }
             writeln!(output, "  var _{}: {}", field.name, pony_type)?;
         }
@@ -179,10 +183,10 @@ fn generate_behaviour(
     behaviour: &Behaviour,
     options: &GenerationOptions,
 ) -> Result<()> {
-    if options.include_docs {
-        if let Some(ref doc) = behaviour.doc {
-            writeln!(output, "  // {}", doc)?;
-        }
+    if options.include_docs
+        && let Some(ref doc) = behaviour.doc
+    {
+        writeln!(output, "  // {}", doc)?;
     }
 
     write!(output, "  be {}(", behaviour.name)?;
@@ -199,7 +203,11 @@ fn generate_behaviour(
     writeln!(output, ") =>")?;
 
     // Body placeholder — users fill in the implementation.
-    writeln!(output, "    // TODO: implement behaviour '{}'", behaviour.name)?;
+    writeln!(
+        output,
+        "    // TODO: implement behaviour '{}'",
+        behaviour.name
+    )?;
     writeln!(output, "    None")?;
     writeln!(output)?;
 
@@ -259,9 +267,7 @@ fn to_snake_case(name: &str) -> String {
 ///
 /// This is the high-level entry point used by the codegen module.
 /// It generates all .pony files and returns them as a vector.
-pub fn generate_package(
-    defs: &ParsedDefinitions,
-) -> Result<Vec<GeneratedFile>> {
+pub fn generate_package(defs: &ParsedDefinitions) -> Result<Vec<GeneratedFile>> {
     let options = GenerationOptions::default();
     generate_pony_files(defs, &options)
 }
@@ -276,13 +282,11 @@ mod tests {
     fn make_test_defs() -> ParsedDefinitions {
         let actors = vec![Actor {
             name: "Greeter".to_string(),
-            fields: vec![
-                Field {
-                    name: "greeting".to_string(),
-                    field_type: "String".to_string(),
-                    capability: RefCapability::Val,
-                },
-            ],
+            fields: vec![Field {
+                name: "greeting".to_string(),
+                field_type: "String".to_string(),
+                capability: RefCapability::Val,
+            }],
             doc: Some("A simple greeting actor".to_string()),
         }];
         let behaviours = vec![Behaviour {

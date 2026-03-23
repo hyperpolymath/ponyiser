@@ -61,10 +61,7 @@ pub fn parse_definitions(manifest: &Manifest) -> Result<ParsedDefinitions> {
         }
         let behaviour = parse_behaviour(behaviour_def)
             .with_context(|| format!("Failed to parse behaviour '{}'", behaviour_def.name))?;
-        behaviour_index.insert(
-            (behaviour.actor.clone(), behaviour.name.clone()),
-            i,
-        );
+        behaviour_index.insert((behaviour.actor.clone(), behaviour.name.clone()), i);
         behaviours.push(behaviour);
     }
 
@@ -150,11 +147,7 @@ pub fn validate_pony_name(name: &str) -> Result<()> {
     // Check for invalid characters (Pony allows alphanumeric and underscore).
     for ch in name.chars() {
         if !ch.is_ascii_alphanumeric() && ch != '_' {
-            anyhow::bail!(
-                "Pony name '{}' contains invalid character '{}'",
-                name,
-                ch
-            );
+            anyhow::bail!("Pony name '{}' contains invalid character '{}'", name, ch);
         }
     }
     Ok(())
@@ -193,7 +186,10 @@ capability = "val"
         assert_eq!(defs.actors.len(), 1);
         assert_eq!(defs.behaviours.len(), 1);
         assert!(defs.actor_index.contains_key("Server"));
-        assert!(defs.behaviour_index.contains_key(&("Server".to_string(), "listen".to_string())));
+        assert!(
+            defs.behaviour_index
+                .contains_key(&("Server".to_string(), "listen".to_string()))
+        );
     }
 
     #[test]

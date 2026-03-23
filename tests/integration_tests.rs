@@ -7,12 +7,12 @@
 // Each test exercises a different aspect of Pony reference capability wrapping.
 
 use ponyiser::abi::{
-    check_subtype, is_subtype, validate_sendability, Actor, Behaviour, BehaviourParam,
-    Field, RefCapability,
+    Actor, Behaviour, BehaviourParam, Field, RefCapability, check_subtype, is_subtype,
+    validate_sendability,
 };
 use ponyiser::codegen::capability::{analyse, infer_capability};
 use ponyiser::codegen::parser::parse_definitions;
-use ponyiser::codegen::pony_gen::{generate_pony_files, GenerationOptions};
+use ponyiser::codegen::pony_gen::{GenerationOptions, generate_pony_files};
 use ponyiser::manifest::{parse_manifest, validate};
 
 use std::fs;
@@ -117,7 +117,10 @@ suggest-capabilities = true
     assert_eq!(files.len(), 2, "Expected 2 .pony files (one per actor)");
 
     // Verify Listener file content.
-    let listener_file = files.iter().find(|f| f.filename == "listener.pony").unwrap();
+    let listener_file = files
+        .iter()
+        .find(|f| f.filename == "listener.pony")
+        .unwrap();
     assert!(
         listener_file.content.contains("actor Listener"),
         "Should declare Listener actor"
@@ -127,11 +130,15 @@ suggest-capabilities = true
         "Should have val port field"
     );
     assert!(
-        listener_file.content.contains("var _connections: Array[TCPConnection] ref"),
+        listener_file
+            .content
+            .contains("var _connections: Array[TCPConnection] ref"),
         "Should have ref connections field"
     );
     assert!(
-        listener_file.content.contains("be accept(conn: TCPConnection iso)"),
+        listener_file
+            .content
+            .contains("be accept(conn: TCPConnection iso)"),
         "Should have accept behaviour with iso parameter"
     );
 
@@ -142,7 +149,9 @@ suggest-capabilities = true
         "Should declare Handler actor"
     );
     assert!(
-        handler_file.content.contains("be received(data: Array[U8] val)"),
+        handler_file
+            .content
+            .contains("be received(data: Array[U8] val)"),
         "Should have received behaviour with val parameter"
     );
 }
@@ -240,10 +249,7 @@ fn test_sendability_violation_detection() {
     }];
 
     let result = analyse(&actors, &behaviours, false);
-    assert!(
-        !result.is_race_free,
-        "Should detect sendability violation"
-    );
+    assert!(!result.is_race_free, "Should detect sendability violation");
     assert_eq!(result.violations.len(), 1);
     assert_eq!(result.violations[0].target, "shared_data");
     assert!(
@@ -265,7 +271,10 @@ fn test_sendability_violation_detection() {
     }];
 
     let clean_result = analyse(&actors, &clean_behaviours, false);
-    assert!(clean_result.is_race_free, "val parameters should be race-free");
+    assert!(
+        clean_result.is_race_free,
+        "val parameters should be race-free"
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -275,7 +284,10 @@ fn test_sendability_violation_detection() {
 #[test]
 fn test_capability_inference() {
     // Sent + written = iso (unique mutable, sendable).
-    assert_eq!(infer_capability(true, true, false, true), RefCapability::Iso);
+    assert_eq!(
+        infer_capability(true, true, false, true),
+        RefCapability::Iso
+    );
 
     // Sent + read-only = val (shared immutable, sendable).
     assert_eq!(

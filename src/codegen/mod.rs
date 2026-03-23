@@ -56,8 +56,7 @@ pub fn generate_all(manifest: &Manifest, output_dir: &str) -> Result<()> {
 
         // Write analysis report alongside generated code.
         let report_path = out.join("analysis-report.txt");
-        fs::write(&report_path, &report)
-            .context("Failed to write analysis report")?;
+        fs::write(&report_path, &report).context("Failed to write analysis report")?;
         println!("  Analysis report: {}", report_path.display());
 
         if !result.is_race_free {
@@ -69,8 +68,8 @@ pub fn generate_all(manifest: &Manifest, output_dir: &str) -> Result<()> {
     }
 
     // Stage 3: Generate Pony source files.
-    let generated_files = pony_gen::generate_package(&defs)
-        .context("Failed to generate Pony source files")?;
+    let generated_files =
+        pony_gen::generate_package(&defs).context("Failed to generate Pony source files")?;
 
     for file in &generated_files {
         let file_path = out.join(&file.filename);
@@ -93,10 +92,7 @@ pub fn generate_all(manifest: &Manifest, output_dir: &str) -> Result<()> {
 /// Currently prints a status message; full Pony compiler integration
 /// is planned for Phase 2.
 pub fn build(manifest: &Manifest, _release: bool) -> Result<()> {
-    println!(
-        "Building ponyiser workload: {}",
-        manifest.project.name
-    );
+    println!("Building ponyiser workload: {}", manifest.project.name);
     println!("  (Pony compiler invocation planned for Phase 2)");
     Ok(())
 }
@@ -105,10 +101,7 @@ pub fn build(manifest: &Manifest, _release: bool) -> Result<()> {
 ///
 /// Currently prints a status message; execution is planned for Phase 2.
 pub fn run(manifest: &Manifest, _args: &[String]) -> Result<()> {
-    println!(
-        "Running ponyiser workload: {}",
-        manifest.project.name
-    );
+    println!("Running ponyiser workload: {}", manifest.project.name);
     println!("  (Execution planned for Phase 2)");
     Ok(())
 }

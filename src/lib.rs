@@ -1,4 +1,11 @@
 #![forbid(unsafe_code)]
+#![allow(
+    dead_code,
+    clippy::too_many_arguments,
+    clippy::manual_strip,
+    clippy::if_same_then_else,
+    clippy::vec_init_then_push
+)]
 // SPDX-License-Identifier: PMPL-1.0-or-later
 // Copyright (c) 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 //
@@ -13,11 +20,11 @@ pub mod codegen;
 pub mod manifest;
 
 pub use abi::{
-    check_subtype, is_subtype, validate_sendability, Actor, Behaviour, BehaviourParam,
-    CapabilityViolation, Field, RefCapability, SubtypingResult,
+    Actor, Behaviour, BehaviourParam, CapabilityViolation, Field, RefCapability, SubtypingResult,
+    check_subtype, is_subtype, validate_sendability,
 };
-pub use codegen::capability::{analyse, infer_capability, AnalysisResult};
-pub use manifest::{load_manifest, parse_manifest, validate, Manifest};
+pub use codegen::capability::{AnalysisResult, analyse, infer_capability};
+pub use manifest::{Manifest, load_manifest, parse_manifest, validate};
 
 /// Convenience: load, validate, and generate all artifacts.
 ///

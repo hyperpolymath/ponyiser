@@ -196,16 +196,14 @@ pub struct Options {
 pub fn load_manifest(path: &str) -> Result<Manifest> {
     let content = std::fs::read_to_string(path)
         .with_context(|| format!("Failed to read manifest: {}", path))?;
-    parse_manifest(&content)
-        .with_context(|| format!("Failed to parse manifest: {}", path))
+    parse_manifest(&content).with_context(|| format!("Failed to parse manifest: {}", path))
 }
 
 /// Parse a manifest from a TOML string.
 ///
 /// This is the core parsing function, separated from file I/O for testability.
 pub fn parse_manifest(content: &str) -> Result<Manifest> {
-    let manifest: Manifest = toml::from_str(content)
-        .context("Invalid ponyiser.toml format")?;
+    let manifest: Manifest = toml::from_str(content).context("Invalid ponyiser.toml format")?;
     Ok(manifest)
 }
 
@@ -254,10 +252,7 @@ pub fn validate(manifest: &Manifest) -> Result<()> {
             anyhow::bail!("behaviour name cannot be empty");
         }
         if behaviour.actor.is_empty() {
-            anyhow::bail!(
-                "behaviour '{}' must specify an actor",
-                behaviour.name
-            );
+            anyhow::bail!("behaviour '{}' must specify an actor", behaviour.name);
         }
         if !actor_names.contains(&behaviour.actor) {
             anyhow::bail!(
@@ -319,7 +314,10 @@ suggest-capabilities = true
 
 /// Print human-readable information about a manifest.
 pub fn print_info(manifest: &Manifest) {
-    println!("=== {} v{} ===", manifest.project.name, manifest.project.version);
+    println!(
+        "=== {} v{} ===",
+        manifest.project.name, manifest.project.version
+    );
     println!("Description: {}", manifest.project.description);
     println!("Source lang:  {}", manifest.project.source_lang);
     println!();
@@ -327,7 +325,10 @@ pub fn print_info(manifest: &Manifest) {
     for actor in &manifest.actors {
         println!("  actor {} ({} fields)", actor.name, actor.fields.len());
         for field in &actor.fields {
-            println!("    {}: {} ({})", field.name, field.field_type, field.capability);
+            println!(
+                "    {}: {} ({})",
+                field.name, field.field_type, field.capability
+            );
         }
     }
     println!();
@@ -348,7 +349,10 @@ pub fn print_info(manifest: &Manifest) {
     println!();
     println!("Analysis:");
     println!("  detect-races:        {}", manifest.analysis.detect_races);
-    println!("  suggest-capabilities: {}", manifest.analysis.suggest_capabilities);
+    println!(
+        "  suggest-capabilities: {}",
+        manifest.analysis.suggest_capabilities
+    );
 }
 
 /// Convert manifest actor/behaviour definitions to ABI types for analysis.

@@ -13,8 +13,8 @@
 // The lattice guarantees that well-typed programs are data-race free.
 
 use crate::abi::{
-    check_subtype, is_subtype, validate_sendability, Actor, Behaviour,
-    CapabilityViolation, Field, RefCapability,
+    Actor, Behaviour, CapabilityViolation, Field, RefCapability, check_subtype, is_subtype,
+    validate_sendability,
 };
 
 /// Result of a full capability analysis pass.
@@ -62,11 +62,7 @@ pub struct CapabilitySuggestion {
 /// * `actors` - All actor definitions to analyse
 /// * `behaviours` - All behaviour definitions to analyse
 /// * `suggest` - Whether to generate improvement suggestions
-pub fn analyse(
-    actors: &[Actor],
-    behaviours: &[Behaviour],
-    suggest: bool,
-) -> AnalysisResult {
+pub fn analyse(actors: &[Actor], behaviours: &[Behaviour], suggest: bool) -> AnalysisResult {
     let mut violations = Vec::new();
     let mut suggestions = Vec::new();
 
@@ -105,11 +101,10 @@ pub fn analyse(
             }
 
             // Generate suggestions for overly permissive capabilities.
-            if suggest {
-                if let Some(suggestion) = suggest_field_capability(actor, field, &actor_behaviours)
-                {
-                    suggestions.push(suggestion);
-                }
+            if suggest
+                && let Some(suggestion) = suggest_field_capability(actor, field, &actor_behaviours)
+            {
+                suggestions.push(suggestion);
             }
         }
     }
@@ -383,9 +378,7 @@ mod tests {
         let result = analyse(&actors, &behaviours, false);
         assert!(!result.is_race_free);
         assert_eq!(result.violations.len(), 1);
-        assert!(result.violations[0]
-            .message
-            .contains("not sendable"));
+        assert!(result.violations[0].message.contains("not sendable"));
     }
 
     #[test]
