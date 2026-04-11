@@ -1,55 +1,27 @@
-;; SPDX-License-Identifier: PMPL-1.0-or-later
-;; Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
-;; META.a2ml — Meta-level information for ponyiser
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# META.a2ml — Ponyiser meta-level information
+[metadata]
+version = "0.1.0"
+last-updated = "2026-03-21"
 
-(meta
-  (version "0.1.0")
-  (last-updated "2026-03-21")
+[project-info]
+license = "PMPL-1.0-or-later"
+author = "Jonathan D.A. Jewell (hyperpolymath)"
 
-  (architecture-decisions
-    (adr "001-iser-pattern"
-      (status "accepted")
-      (context "Need to make Pony's capability system accessible without learning the full language")
-      (decision "Use manifest-driven code generation: user describes concurrent components in TOML, ponyiser generates Pony actors with correct capability annotations")
-      (consequences "Users write zero Pony code; capability inference and codegen handles everything"))
+[architecture-decisions]
+decisions = [
+  # No ADRs recorded
+]
 
-    (adr "002-abi-ffi-standard"
-      (status "accepted")
-      (context "Need verified interop between Rust CLI, generated Pony code, and user code")
-      (decision "Idris2 ABI for formal proofs of capability subtyping and actor mailbox layout; Zig FFI for C-ABI bridge")
-      (consequences "Compile-time correctness guarantees for the subtyping lattice; zero runtime overhead from proofs"))
+[development-practices]
+versioning = "SemVer"
+documentation = "AsciiDoc"
+build-tool = "just"
 
-    (adr "003-six-reference-capabilities"
-      (status "accepted")
-      (context "Pony defines exactly six reference capabilities: iso, val, ref, box, trn, tag")
-      (decision "Model all six in the Idris2 ABI with formal subtyping proofs; mirror in Zig FFI as enum")
-      (consequences "Subtyping lattice is provably correct; sendability (iso/val/tag only) is enforced at the type level"))
-
-    (adr "004-actor-model"
-      (status "accepted")
-      (context "Pony's concurrency is actor-based with causal messaging")
-      (decision "Generate actors with private heaps, behaviours as async handlers, causal message ordering")
-      (consequences "No shared mutable state; data races impossible by construction; GC is per-actor"))
-
-    (adr "005-rsr-template"
-      (status "accepted")
-      (context "Need consistent project structure across 29+ -iser repos")
-      (decision "All repos cloned from rsr-template-repo with full CI/CD and governance")
-      (consequences "17 workflows, SECURITY.md, CONTRIBUTING, bot directives from day one")))
-
-  (development-practices
-    (language "Rust" (purpose "CLI, manifest parsing, orchestration"))
-    (language "Idris2" (purpose "ABI formal proofs: RefCapability, CapabilitySubtyping, Actor, Behaviour, CausalMessage, mailbox layout"))
-    (language "Zig" (purpose "FFI C-ABI bridge: capability analysis, subtyping checks, sendability validation"))
-    (build-tool "cargo")
-    (ci "GitHub Actions (17 workflows)"))
-
-  (design-rationale
-    (principle "Manifest-driven"
-      (explanation "User intent captured in ponyiser.toml; capability inference and Pony codegen are deterministic and reproducible"))
-    (principle "Formally verified capability lattice"
-      (explanation "Idris2 dependent types prove the subtyping relation (iso<:trn<:ref<:box, iso<:val<:box, *<:tag) at compile time"))
-    (principle "Sendability enforcement"
-      (explanation "Only iso (consumed), val (immutable), and tag (identity) can cross actor boundaries; enforced in both Idris2 proofs and Zig FFI"))
-    (principle "Zero target language exposure"
-      (explanation "Users never write Pony directly — ponyiser generates actors, behaviours, and capability annotations from the manifest"))))
+[maintenance-axes]
+scoping-first = true
+axis-1 = "must > intend > like"
+axis-2 = "corrective > adaptive > perfective"
+axis-3 = "systems > compliance > effects"
