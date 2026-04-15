@@ -2,6 +2,8 @@
 # ponyiser — Wrap concurrent code in Pony reference capabilities
 
 # Default: build and test
+import? "contractile.just"
+
 default: build test
 
 # Build release binary
