@@ -137,7 +137,7 @@ pub fn validate_pony_name(name: &str) -> Result<()> {
     if name.is_empty() {
         anyhow::bail!("name cannot be empty");
     }
-    let first = name.chars().next().unwrap();
+    let first = name.chars().next().expect("TODO: handle error");
     if !first.is_ascii_uppercase() {
         anyhow::bail!(
             "Pony actor/type name '{}' must start with an uppercase letter",
@@ -181,8 +181,8 @@ name = "port"
 type = "U16"
 capability = "val"
 "#;
-        let manifest = parse_manifest(toml).unwrap();
-        let defs = parse_definitions(&manifest).unwrap();
+        let manifest = parse_manifest(toml).expect("TODO: handle error");
+        let defs = parse_definitions(&manifest).expect("TODO: handle error");
         assert_eq!(defs.actors.len(), 1);
         assert_eq!(defs.behaviours.len(), 1);
         assert!(defs.actor_index.contains_key("Server"));
@@ -216,8 +216,8 @@ name = "bar"
 actor = "B"
 name = "baz"
 "#;
-        let manifest = parse_manifest(toml).unwrap();
-        let defs = parse_definitions(&manifest).unwrap();
+        let manifest = parse_manifest(toml).expect("TODO: handle error");
+        let defs = parse_definitions(&manifest).expect("TODO: handle error");
         let a_behaviours = behaviours_for_actor(&defs, "A");
         assert_eq!(a_behaviours.len(), 2);
         let b_behaviours = behaviours_for_actor(&defs, "B");

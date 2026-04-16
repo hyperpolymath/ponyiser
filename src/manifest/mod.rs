@@ -417,7 +417,7 @@ name = "Main"
 actor = "Main"
 name = "run"
 "#;
-        let manifest = parse_manifest(toml).unwrap();
+        let manifest = parse_manifest(toml).expect("TODO: handle error");
         assert_eq!(manifest.project.name, "test");
         assert_eq!(manifest.actors.len(), 1);
         assert_eq!(manifest.behaviours.len(), 1);
@@ -460,7 +460,7 @@ capability = "iso"
 detect-races = true
 suggest-capabilities = true
 "#;
-        let manifest = parse_manifest(toml).unwrap();
+        let manifest = parse_manifest(toml).expect("TODO: handle error");
         assert_eq!(manifest.project.name, "server");
         assert_eq!(manifest.actors[0].fields.len(), 2);
         assert_eq!(manifest.actors[0].fields[0].capability, RefCapability::Val);
@@ -485,7 +485,7 @@ name = "Main"
 actor = "Main"
 name = "run"
 "#;
-        let manifest = parse_manifest(toml).unwrap();
+        let manifest = parse_manifest(toml).expect("TODO: handle error");
         assert!(validate(&manifest).is_err());
     }
 
@@ -505,7 +505,7 @@ name = "Main"
 actor = "Main"
 name = "run"
 "#;
-        let manifest = parse_manifest(toml).unwrap();
+        let manifest = parse_manifest(toml).expect("TODO: handle error");
         assert!(validate(&manifest).is_err());
     }
 
@@ -522,7 +522,7 @@ name = "Main"
 actor = "NonExistent"
 name = "run"
 "#;
-        let manifest = parse_manifest(toml).unwrap();
+        let manifest = parse_manifest(toml).expect("TODO: handle error");
         assert!(validate(&manifest).is_err());
     }
 }
