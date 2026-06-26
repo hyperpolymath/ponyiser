@@ -18,6 +18,7 @@ module Ponyiser.ABI.Types
 import Data.Bits
 import Data.So
 import Data.Vect
+import Decidable.Equality
 
 %default total
 
@@ -29,12 +30,12 @@ import Data.Vect
 public export
 data Platform = Linux | Windows | MacOS | BSD | WASM
 
-||| Compile-time platform detection
+||| The platform this build targets. Defaults to Linux; the Rust/Zig build
+||| layer overrides this via the codegen target selection. (Previously a
+||| `%runElab` stub that required ElabReflection and did not compile.)
 public export
 thisPlatform : Platform
-thisPlatform =
-  %runElab do
-    pure Linux  -- Default, override with compiler flags
+thisPlatform = Linux
 
 --------------------------------------------------------------------------------
 -- Pony Reference Capabilities
@@ -58,7 +59,9 @@ data RefCapability : Type where
   Trn : RefCapability
   Tag : RefCapability
 
-||| Reference capabilities are decidably equal
+||| Reference capabilities are decidably equal. The off-diagonal cases
+||| discharge the disequality explicitly; the previous `decEq _ _ = No absurd`
+||| did not compile (no `Uninhabited (x = y)` instance exists for these).
 public export
 DecEq RefCapability where
   decEq Iso Iso = Yes Refl
@@ -67,7 +70,36 @@ DecEq RefCapability where
   decEq Box Box = Yes Refl
   decEq Trn Trn = Yes Refl
   decEq Tag Tag = Yes Refl
-  decEq _ _ = No absurd
+  decEq Iso Val = No (\case Refl impossible)
+  decEq Iso Ref = No (\case Refl impossible)
+  decEq Iso Box = No (\case Refl impossible)
+  decEq Iso Trn = No (\case Refl impossible)
+  decEq Iso Tag = No (\case Refl impossible)
+  decEq Val Iso = No (\case Refl impossible)
+  decEq Val Ref = No (\case Refl impossible)
+  decEq Val Box = No (\case Refl impossible)
+  decEq Val Trn = No (\case Refl impossible)
+  decEq Val Tag = No (\case Refl impossible)
+  decEq Ref Iso = No (\case Refl impossible)
+  decEq Ref Val = No (\case Refl impossible)
+  decEq Ref Box = No (\case Refl impossible)
+  decEq Ref Trn = No (\case Refl impossible)
+  decEq Ref Tag = No (\case Refl impossible)
+  decEq Box Iso = No (\case Refl impossible)
+  decEq Box Val = No (\case Refl impossible)
+  decEq Box Ref = No (\case Refl impossible)
+  decEq Box Trn = No (\case Refl impossible)
+  decEq Box Tag = No (\case Refl impossible)
+  decEq Trn Iso = No (\case Refl impossible)
+  decEq Trn Val = No (\case Refl impossible)
+  decEq Trn Ref = No (\case Refl impossible)
+  decEq Trn Box = No (\case Refl impossible)
+  decEq Trn Tag = No (\case Refl impossible)
+  decEq Tag Iso = No (\case Refl impossible)
+  decEq Tag Val = No (\case Refl impossible)
+  decEq Tag Ref = No (\case Refl impossible)
+  decEq Tag Box = No (\case Refl impossible)
+  decEq Tag Trn = No (\case Refl impossible)
 
 ||| Convert RefCapability to C integer for FFI
 public export
@@ -169,9 +201,9 @@ isSendable : (cap : RefCapability) -> Dec (Sendable cap)
 isSendable Iso = Yes IsoSendable
 isSendable Val = Yes ValSendable
 isSendable Tag = Yes TagSendable
-isSendable Ref = No (\case impossible)
-isSendable Box = No (\case impossible)
-isSendable Trn = No (\case impossible)
+isSendable Ref = No (\prf => case prf of _ impossible)
+isSendable Box = No (\prf => case prf of _ impossible)
+isSendable Trn = No (\prf => case prf of _ impossible)
 
 --------------------------------------------------------------------------------
 -- Actors
@@ -189,13 +221,13 @@ public export
 record Actor where
   constructor MkActor
   actorName   : String
-  fields      : Vect n (String, RefCapability)
-  behaviours  : Vect m String
+  fields      : Vect actorFieldCount (String, RefCapability)
+  behaviours  : Vect actorBehaviourCount String
 
 ||| Proof that all fields in an actor are valid (no sendable-only caps in local fields)
 ||| Local fields can have any capability.
 public export
-data ValidActorFields : Vect n (String, RefCapability) -> Type where
+data ValidActorFields : Vect k (String, RefCapability) -> Type where
   NoFields    : ValidActorFields []
   ConsField   : ValidActorFields rest -> ValidActorFields ((name, cap) :: rest)
 
@@ -214,12 +246,12 @@ public export
 record Behaviour where
   constructor MkBehaviour
   behaviourName : String
-  params        : Vect n (String, RefCapability)
+  params        : Vect behaviourParamCount (String, RefCapability)
 
 ||| Proof that all behaviour parameters are sendable.
 ||| This is the core safety guarantee: you cannot send a ref/box/trn across actors.
 public export
-data ValidBehaviourParams : Vect n (String, RefCapability) -> Type where
+data ValidBehaviourParams : Vect k (String, RefCapability) -> Type where
   NoParams   : ValidBehaviourParams []
   ConsParam  : Sendable cap -> ValidBehaviourParams rest
              -> ValidBehaviourParams ((name, cap) :: rest)
@@ -269,7 +301,9 @@ resultToInt InvalidCapability = 5
 resultToInt SendabilityViolation = 6
 resultToInt ActorNotFound = 7
 
-||| Results are decidably equal
+||| Results are decidably equal. The off-diagonal cases discharge the
+||| disequality explicitly; the previous `decEq _ _ = No absurd` did not
+||| compile (no `Uninhabited (x = y)` instance exists for these).
 public export
 DecEq Result where
   decEq Ok Ok = Yes Refl
@@ -280,7 +314,62 @@ DecEq Result where
   decEq InvalidCapability InvalidCapability = Yes Refl
   decEq SendabilityViolation SendabilityViolation = Yes Refl
   decEq ActorNotFound ActorNotFound = Yes Refl
-  decEq _ _ = No absurd
+  decEq Ok Error = No (\case Refl impossible)
+  decEq Ok InvalidParam = No (\case Refl impossible)
+  decEq Ok OutOfMemory = No (\case Refl impossible)
+  decEq Ok NullPointer = No (\case Refl impossible)
+  decEq Ok InvalidCapability = No (\case Refl impossible)
+  decEq Ok SendabilityViolation = No (\case Refl impossible)
+  decEq Ok ActorNotFound = No (\case Refl impossible)
+  decEq Error Ok = No (\case Refl impossible)
+  decEq Error InvalidParam = No (\case Refl impossible)
+  decEq Error OutOfMemory = No (\case Refl impossible)
+  decEq Error NullPointer = No (\case Refl impossible)
+  decEq Error InvalidCapability = No (\case Refl impossible)
+  decEq Error SendabilityViolation = No (\case Refl impossible)
+  decEq Error ActorNotFound = No (\case Refl impossible)
+  decEq InvalidParam Ok = No (\case Refl impossible)
+  decEq InvalidParam Error = No (\case Refl impossible)
+  decEq InvalidParam OutOfMemory = No (\case Refl impossible)
+  decEq InvalidParam NullPointer = No (\case Refl impossible)
+  decEq InvalidParam InvalidCapability = No (\case Refl impossible)
+  decEq InvalidParam SendabilityViolation = No (\case Refl impossible)
+  decEq InvalidParam ActorNotFound = No (\case Refl impossible)
+  decEq OutOfMemory Ok = No (\case Refl impossible)
+  decEq OutOfMemory Error = No (\case Refl impossible)
+  decEq OutOfMemory InvalidParam = No (\case Refl impossible)
+  decEq OutOfMemory NullPointer = No (\case Refl impossible)
+  decEq OutOfMemory InvalidCapability = No (\case Refl impossible)
+  decEq OutOfMemory SendabilityViolation = No (\case Refl impossible)
+  decEq OutOfMemory ActorNotFound = No (\case Refl impossible)
+  decEq NullPointer Ok = No (\case Refl impossible)
+  decEq NullPointer Error = No (\case Refl impossible)
+  decEq NullPointer InvalidParam = No (\case Refl impossible)
+  decEq NullPointer OutOfMemory = No (\case Refl impossible)
+  decEq NullPointer InvalidCapability = No (\case Refl impossible)
+  decEq NullPointer SendabilityViolation = No (\case Refl impossible)
+  decEq NullPointer ActorNotFound = No (\case Refl impossible)
+  decEq InvalidCapability Ok = No (\case Refl impossible)
+  decEq InvalidCapability Error = No (\case Refl impossible)
+  decEq InvalidCapability InvalidParam = No (\case Refl impossible)
+  decEq InvalidCapability OutOfMemory = No (\case Refl impossible)
+  decEq InvalidCapability NullPointer = No (\case Refl impossible)
+  decEq InvalidCapability SendabilityViolation = No (\case Refl impossible)
+  decEq InvalidCapability ActorNotFound = No (\case Refl impossible)
+  decEq SendabilityViolation Ok = No (\case Refl impossible)
+  decEq SendabilityViolation Error = No (\case Refl impossible)
+  decEq SendabilityViolation InvalidParam = No (\case Refl impossible)
+  decEq SendabilityViolation OutOfMemory = No (\case Refl impossible)
+  decEq SendabilityViolation NullPointer = No (\case Refl impossible)
+  decEq SendabilityViolation InvalidCapability = No (\case Refl impossible)
+  decEq SendabilityViolation ActorNotFound = No (\case Refl impossible)
+  decEq ActorNotFound Ok = No (\case Refl impossible)
+  decEq ActorNotFound Error = No (\case Refl impossible)
+  decEq ActorNotFound InvalidParam = No (\case Refl impossible)
+  decEq ActorNotFound OutOfMemory = No (\case Refl impossible)
+  decEq ActorNotFound NullPointer = No (\case Refl impossible)
+  decEq ActorNotFound InvalidCapability = No (\case Refl impossible)
+  decEq ActorNotFound SendabilityViolation = No (\case Refl impossible)
 
 --------------------------------------------------------------------------------
 -- Opaque Handles
@@ -292,12 +381,15 @@ public export
 data Handle : Type where
   MkHandle : (ptr : Bits64) -> {auto 0 nonNull : So (ptr /= 0)} -> Handle
 
-||| Safely create a handle from a pointer value.
-||| Returns Nothing if pointer is null.
+||| Safely create a handle from a pointer value. Uses `choose` to obtain a
+||| real `So (ptr /= 0)` witness for the non-null branch. (Previously
+||| `Just (MkHandle ptr)` left the `auto` proof unsolved and did not compile.)
 public export
 createHandle : Bits64 -> Maybe Handle
-createHandle 0 = Nothing
-createHandle ptr = Just (MkHandle ptr)
+createHandle ptr =
+  case choose (ptr /= 0) of
+    Left ok => Just (MkHandle ptr {nonNull = ok})
+    Right _ => Nothing
 
 ||| Extract pointer value from handle.
 public export
