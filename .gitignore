@@ -15,7 +15,12 @@ Thumbs.db
 /target/
 /_build/
 /build/
+**/build/
 /dist/
+
+# Idris2 compiled artifacts
+*.ttc
+*.ttm
 /out/
 
 # Dependencies
