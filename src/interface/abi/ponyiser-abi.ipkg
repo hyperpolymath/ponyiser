@@ -9,3 +9,4 @@ modules = Ponyiser.ABI.Types
         , Ponyiser.ABI.Layout
         , Ponyiser.ABI.Foreign
         , Ponyiser.ABI.Proofs
+        , Ponyiser.ABI.Semantics
