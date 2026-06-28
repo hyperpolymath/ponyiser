@@ -12,3 +12,4 @@ modules = Ponyiser.ABI.Types
         , Ponyiser.ABI.Semantics
         , Ponyiser.ABI.Invariants
         , Ponyiser.ABI.FfiSeam
+        , Ponyiser.ABI.Capstone
