@@ -317,7 +317,8 @@ mod tests {
     #[test]
     fn test_generate_pony_files() {
         let defs = make_test_defs();
-        let files = generate_pony_files(&defs, &GenerationOptions::default()).expect("TODO: handle error");
+        let files =
+            generate_pony_files(&defs, &GenerationOptions::default()).expect("TODO: handle error");
         assert_eq!(files.len(), 1);
         assert_eq!(files[0].filename, "greeter.pony");
         assert!(files[0].content.contains("actor Greeter"));
